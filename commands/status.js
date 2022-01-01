@@ -7,10 +7,42 @@ const request = require('request');
 module.exports = {
     name: "status",
     description: "Gives the server status of Apex Legends",
-    group: 'status',
-    async execute(message, client) {
-        var args = message.content.split(' ');
-        var type = args[1].toLowerCase();
+    options: [
+        {
+          name: 'type',
+          type: 3, // 'STRING' Type
+          description: 'The platform you play on',
+          required: true,
+          choices: [
+            {
+                name: 'Origin Login',
+                value: 'origin'
+            },
+            {
+                name: 'EA Novafusion',
+                value: 'novafusion'
+            },
+            {
+                name: 'EA Accounts',
+                value: 'accounts'
+            },
+            {
+                name: 'Apex Crossplay',
+                value: 'crossplay'
+            },
+            {
+                name: 'APIs',
+                value: 'api'
+            },
+            {
+                name: 'Consoles',
+                value: 'console'
+            }
+          ]
+        }
+      ],
+    async execute(interaction, client) {
+        var type = interaction.options.get('type').value;
 
         var options = {
             url: `https://api.mozambiquehe.re/servers?auth=${config.apex.apiKey}`,
@@ -23,19 +55,19 @@ module.exports = {
 
                 if(type == "origin")
                 {
-                    displayStatus(message.channel, info.Origin_login, "Origin Login")
+                    displayStatus(interaction, info.Origin_login, "Origin Login")
                 }
                 else if(type == "novafusion")
                 {
-                    displayStatus(message.channel, info.EA_novafusion, "EA Novafusion")
+                    displayStatus(interaction, info.EA_novafusion, "EA Novafusion")
                 }
                 else if(type == "accounts")
                 {
-                    displayStatus(message.channel, info.EA_accounts, "EA Accounts")
+                    displayStatus(interaction, info.EA_accounts, "EA Accounts")
                 }
                 else if(type == "crossplay")
                 {
-                    displayStatus(message.channel, info.ApexOauth_Crossplay, "Apex Crossplay")
+                    displayStatus(interaction, info.ApexOauth_Crossplay, "Apex Crossplay")
                 }
                 else if(type == "api")
                 {
@@ -53,7 +85,10 @@ module.exports = {
                     .addField("Playstation-API", `${json["Playstation-API"].Status}   ${json["Playstation-API"].ResponseTime} ms`)
                     .addField("Xbox-API", `${json["Xbox-API"].Status}   ${json["Xbox-API"].ResponseTime} ms`)
                     .setFooter("apexlegendsstatus.com")
-                    message.channel.send(embed);
+                    interaction.reply({
+                        embeds: [ embed ],
+                        ephemeral: true
+                    });
                 }
                 else if(type == "console")
                 {
@@ -65,33 +100,19 @@ module.exports = {
                     .addField("Playstation-Network", `${json["Playstation-Network"].Status}`)
                     .addField("Xbox-Live", `${json["Xbox-Live"].Status}`)
                     .setFooter("apexlegendsstatus.com")
-                    message.channel.send(embed);
-                }
-                else if(type == "view")
-                {
-                    const embed = new Discord.MessageEmbed()
-                    .setColor(config.discord.embedHex)
-                    .setTitle("Status Types")
-                    .addField("accounts", "EA Accounts")
-                    .addField("api", "APIs")
-                    .addField("console", "Consoles")
-                    .addField("crossplay", "Apex Crossplay")
-                    .addField("novafusion", "EA Novafusion")
-                    .addField("origin", "Origin Login")                   
-                    .setFooter("apexlegendsstatus.com")
-                    message.channel.send(embed);
-                }   
+                    interaction.reply({
+                        embeds: [ embed ],
+                        ephemeral: true
+                    });
+                } 
             }
         }
           
         request(options, callback);
-        message.channel.send(":computer: Pinging...").then(msg => {
-            msg.delete({ timeout: 3000 });
-        });
     }
 }
 
-function displayStatus(channel, json, name) {
+function displayStatus(interaction, json, name) {
     console.log(json);
 
     const embed = new Discord.MessageEmbed()
@@ -104,7 +125,10 @@ function displayStatus(channel, json, name) {
     .addField("US-East", `${json["US-East"].Status}     ${json["US-East"].ResponseTime} ms`, true)
     .addField("South America", `${json.SouthAmerica.Status}     ${json.SouthAmerica.ResponseTime} ms`, true)
     .setFooter("apexlegendsstatus.com")
-    channel.send(embed);
+    interaction.reply({
+        embeds: [ embed ],
+        ephemeral: true
+    });
 }
 
 function getStatus(status) {

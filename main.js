@@ -32,6 +32,9 @@ client.once('disconnect', () => {
 client.once('ready', () => {
     logger.log('Online and connected to Discord', 'main');
     updateMap(client);
+    client.guilds.fetch(config.discord.guild).then((g) => {
+        g.commands.set(client.commands)
+    });
 });
 
 // Saves the log at 11:59pm
@@ -51,20 +54,41 @@ setInterval(function() {
 }, 302000)
 
 // Handle commands
-client.on('message', async message => {
+client.on('messageCreate', async message => {
     if(message.author.bot) return;
     if(!message.content.startsWith(config.discord.botPrefix)) return;
     
+    // try {
+    //     const args = message.content.slice(config.discord.botPrefix.length).split(/ +/);
+    //     const commandName = args.shift().toLowerCase();
+    //     const command = client.commands.get(commandName);
+    //     command.execute(message, client); 
+    //     logger.log(`Ran command: '${config.discord.botPrefix}${commandName}' from '${message.author.username}'`, 'client');
+        
+    // } catch(err) {
+    //     logger.warn(`Unknown command: '${message.content}' from '${message.author.username}' (${message.guild.name})`, 'client');
+    //     logger.error(err, 'client');
+    // }
+
+    message.reply('**Prefixes are now deprecated!** The bot has moved over to the new Discord command system with slash commands. Type `/` to get started.');
+});
+
+
+// Handle Interactions
+client.on('interactionCreate', async interaction => {
+    const command = client.commands.get(interaction.commandName.toLowerCase());
+
     try {
-        const args = message.content.slice(config.discord.botPrefix.length).split(/ +/);
-        const commandName = args.shift().toLowerCase();
-        const command = client.commands.get(commandName);
-        command.execute(message, client); 
-        logger.log(`Ran command: '${config.discord.botPrefix}${commandName}' from '${message.author.username}'`, 'main');
+        command.execute(interaction, client); 
+        logger.log(`Received interaction: '${interaction.id}' from '${interaction.member.displayName}'`, 'client');
         
     } catch(err) {
-        logger.warn(`Unknown command: '${message.content}' from '${message.author.username}' (${message.guild.name})`, 'main');
-        logger.error(err, 'main');
+        logger.warn(`Unknown command: '${interaction.id}' from '${message.author.username}' (${interaction.guild.name})`, 'client');
+        logger.error(``, 'client');
+        interaction.followUp({
+            content: ':x: `' + err + '`',
+            ephemeral: true
+        });
     }
 });
 
@@ -99,18 +123,18 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 // New member joins
 //
 client.on('guildMemberAdd', member => {
-    logger.log(`User '${member.username}' (${member.id}) joined server '${member.guild.id}' (${member.guild.name})`)
+    logger.log(`User '${member.displayName}' (${member.id}) joined server '${member.guild.name}' (${member.guild.id})`, 'event');
 
-    var user = client.users.cache.find(user => user.id === member.id);
-    var createdDate = new Date(user.createdAt);
+    var createdDate = new Date(member.user.createdAt);
+    console.log(createdDate);
 
     const embed = new Discord.MessageEmbed()
     .setColor('1f8b4c')
-    .setAuthor(`${user.username}#${user.discriminator} joined the guild`)
-    .addField('Total Users:', member.guild.memberCount, true)
-    .addField('Account created:', `${createdDate.toString().split(" ").slice(0, 4).join(" ")} (${getActiveDays(user.createdAt) -1} days old)`, true)
-    .setFooter("ID: " + user.id)
-    client.channels.cache.get(config.discord.logging).send(embed);
+    .setAuthor(`${member.user.username}#${member.user.discriminator} joined the guild`)
+    .addField('Total Users:', member.guild.memberCount.toString(), true)
+    .addField('Account created:', `${moment(createdDate).format('llll')} (${getActiveDays(member.user.createdAt) -1} days old)`, true)
+    .setFooter("ID: " + member.user.id)
+    client.channels.cache.get(config.discord.logging).send({ embeds: [embed] });
 });
 
 
@@ -118,27 +142,37 @@ client.on('guildMemberAdd', member => {
 // Member leaves
 //
 client.on('guildMemberRemove', member => {
-    logger.log(`User '${member.username}' (${member.id}) left server '${member.guild.id}' (${member.guild.name})`)
+    logger.log(`User '${member.displayName}' (${member.id}) left server '${member.guild.name}' (${member.guild.id})`)
 
-    var user = client.users.cache.find(user => user.id === member.id);
-    var createdDate = new Date(user.createdAt);
+    var joinedDate = new Date(member.joinedAt);
+    console.log(joinedDate);
 
     const embed = new Discord.MessageEmbed()
     .setColor('E74C3C')
-    .setAuthor(`${user.username}#${user.discriminator} left the guild`)
-    .addField('Total Users:', member.guild.memberCount, true)
-    .addField('Account created:', `${createdDate.toString().split(" ").slice(0, 4).join(" ")} (${getActiveDays(user.createdAt) -1} days old)`, true)
-    .setFooter("ID: " + user.id)
-    client.channels.cache.get(config.discord.logging).send(embed);
+    .setAuthor(`${member.user.username}#${member.user.discriminator} left the guild`)
+    .addField('Total Users:', member.guild.memberCount.toString(), true)
+    .addField('Member since:', `${moment(joinedDate).format('llll')} (${getActiveDays(member.joinedAt) -1} days old)`, true)
+    .setFooter("ID: " + member.user.id)
+    client.channels.cache.get(config.discord.logging).send({ embeds: [embed] });
 
     db.serialize(() => {
-        db.run(`DELETE FROM rankings WHERE username = "${member.displayName}"`, (err) => {
+        db.run(`DELETE FROM brRanks WHERE username = "${member.displayName}"`, (err) => {
             if(err){
                 logger.error(err, 'database');
             }
             else
             {
-                logger.log(`Removed rankings for user '${user.username}' from database`, 'event');
+                logger.log(`Removed brRanks for user '${user.username}' from database`, 'event');
+            }
+        });
+
+        db.run(`DELETE FROM arRanks WHERE username = "${member.displayName}"`, (err) => {
+            if(err){
+                logger.error(err, 'database');
+            }
+            else
+            {
+                logger.log(`Removed arRanks for user '${user.username}' from database`, 'event');
             }
         });
 
@@ -162,18 +196,18 @@ client.on('inviteCreate', (invite) => {
     console.log(invite);
     logger.log(`User '${invite.inviter.username}' created invite' (${invite.code})`)
 
-    var user = client.users.cache.find(user => user.id === invite.inviter.id);
+    var user = invite.inviter;
     var createdDate = new Date(invite.createdAt);
     var expireDate = new Date(invite.expiresAt);
 
     const embed = new Discord.MessageEmbed()
     .setColor('1f8b4c')
-    .setAuthor(`${user.username}#${user.discriminator} created invite`, user.avatarURL())
-    .addField('Code:', invite.code)
+    .setAuthor(`${user.username.toString()}#${user.discriminator.toString()} created invite`)
+    .addField('Code:', invite.code.toString())
     .addField('Created:', `${moment(createdDate).format('llll')} (${getActiveMinutes(invite.createdAt)} minutes ago)`)
     .addField('Expires:', `${moment(expireDate).format('llll')} (${getActiveMinutes(invite.expiresAt)} minutes)`)
-    .setFooter("ID: " + user.id)
-    client.channels.cache.get(config.discord.logging).send(embed);
+    .setFooter("ID: " + user.id.toString())
+    client.channels.cache.get(config.discord.logging).send({ embeds: [embed] });
 });
 
 

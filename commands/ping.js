@@ -5,20 +5,18 @@ const logger = require('kailogs');
 module.exports = {
     name: "ping",
     description: "Checks the connection of the bot",
-    group: 'general',
-    stat: null,
-    async execute(message, client) {
-        message.channel.send("Pinging...").then(msg =>{
-            var botping = Math.round(message.client.ws.ping);
-            var ping = msg.createdTimestamp - message.createdTimestamp;
+    async execute(interaction, client) {
+        interaction.channel.send("Pinging...").then(intr =>{
+            var botping = Math.round(interaction.client.ws.ping);
+            var ping = intr.createdTimestamp - interaction.createdTimestamp;
 
             var embed = new Discord.MessageEmbed()
             .setDescription(":hourglass_flowing_sand: " + ping + "ms\n\n:stopwatch: " + botping + "ms")
             .setColor(config.discord.embedHex)
             
-            msg.delete();
-            message.channel.send(embed);
-            logger.log(`Ping requested. ${ping}ms latency, ${botping}ms API responce time.`, 'command');
+            intr.delete();
+            interaction.reply({ embeds: [embed] });
+            logger.log(`Ping requested. ${ping}ms latency, ${botping}ms API responce time.`, this.name);
       });
     }
 }

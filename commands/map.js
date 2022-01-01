@@ -7,14 +7,34 @@ const logger = require('kailogs');
 module.exports = {
     name: "map",
     description: "Give the current map and the time left",
-    group: "general",
-    async execute(message, client) {
+    options: [
+        {
+          name: 'mode',
+          type: 3, // 'STRING' Type
+          description: 'The platform you play on',
+          required: true,
+          choices: [
+            {
+                name: 'Battle Royal',
+                value: 'br'
+            },
+            {
+                name: 'Arenas',
+                value: 'arenas'
+            },
+            {
+                name: 'Arenas Ranked',
+                value: 'arenas-ranked'
+            }
+          ]
+        }
+      ],
+    async execute(interaction, client) {
         var options = {
             url: `https://api.mozambiquehe.re/maprotation?version=2&auth=${config.apex.apiKey}`,
         };
 
-        var args = message.content.split(' ');
-        var mode = args[1].toLowerCase();
+        var mode = interaction.options.get('mode').value;
 
         if(mode == "br")
         {
@@ -30,7 +50,9 @@ module.exports = {
                     .addField("Time Left", info.battle_royale.current.remainingTimer, true)
                     .addField("Next", `${info.battle_royale.next.map} (For ${info.battle_royale.next.DurationInMinutes} Minutes)`, true)
                     .setImage(info.battle_royale.current.asset)
-                    message.channel.send(embed);  
+                    interaction.reply({
+                        embeds: [embed]
+                    });
                 }
             }
               
@@ -50,7 +72,9 @@ module.exports = {
                     .addField("Time Left", info.arenas.current.remainingTimer, true)
                     .addField("Next", `${info.arenas.next.map} (For ${info.arenas.next.DurationInMinutes} Minutes)`, true)
                     .setImage(info.arenas.current.asset)
-                    message.channel.send(embed);  
+                    interaction.reply({
+                        embeds: [embed]
+                    });
                 }
             }
               
@@ -70,15 +94,13 @@ module.exports = {
                     .addField("Time Left", info.arenasRanked.current.remainingTimer, true)
                     .addField("Next", `${info.arenasRanked.next.map} (For ${info.arenasRanked.next.DurationInMinutes} Minutes)`, true)
                     .setImage(info.arenasRanked.current.asset)
-                    message.channel.send(embed);  
+                    interaction.reply({
+                        embeds: [embed]
+                    });
                 }
             }
               
             request(options, callback);
-        }
-        else
-        {
-            message.channel.send(':x: `' + mode + '`** is not a valid parameter!** Usage `!map <br>|<arenas>|<arenas-ranked>`');
         }
     }
 }

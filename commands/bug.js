@@ -8,7 +8,7 @@ module.exports = {
     name: "bug",
     description: "Links to the bug tracker.",
     group: "general",
-    async execute(message, client) {
+    async execute(interaction, client) {
         var options = {
             url: 'https://api.github.com/repos/TheGuitarleader/MozamBot/issues?state=all',
             headers: {
@@ -45,21 +45,27 @@ module.exports = {
                     }
                 });
 
+                console.log(featureRequests);
+                console.log(activeBugs);
+                console.log(fixedBugs);
+
                 const embed = new Discord.MessageEmbed()
                 .setColor(config.discord.embedHex)
                 .setTitle(`Bug Tracker`)
-                .setThumbnail(client.user.avatarURL())
+                .setThumbnail(interaction.client.user.avatarURL())
                 .setDescription(`This helps us keep track of bugs and possible \nthings to add to make this bot even better!\n
                 To submit a issue or something to add:
                 - Click the link above.
                 - Fill out the title and add a brief description.
                 - Add the necessary label if its a bug or a feature.`)
-                .addField("Features Submitted", featureRequests, false)
-                .addField("Known Bugs", activeBugs, true)
-                .addField("Bugs Fixed", fixedBugs, true)
-                .setURL("https://github.com/TheGuitarleader/ApexDiscordBot/issues/new") 
-                message.reply(embed);
-                logger.log(`Showed bug tracker on guild '${message.guild.id}' (${message.guild.name})`, 'cmnd');
+                .addField("Features Submitted", featureRequests.toString(), false)
+                .addField("Known Bugs", activeBugs.toString(), true)
+                .addField("Bugs Fixed", fixedBugs.toString(), true)
+                .setURL("https://github.com/TheGuitarleader/MozamBot/issues/new") 
+                logger.log(`Showed bug tracker on guild '${interaction.guild.name}' (${interaction.guild.id})`, this.name);
+                interaction.reply({
+                    embeds: [ embed ]
+                });
             }
         }
           

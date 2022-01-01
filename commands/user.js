@@ -6,23 +6,40 @@ const request = require('request');
 module.exports = {
     name: "player",
     description: "Searches Apex for a player (Origin ONLY)",
-    group: 'general',
-    stat: null,
-    async execute(message, client) {
-        args = message.content.split(' ');
-
-        console.log(args);
-
-        platform = args[1];
-
-        // if(platform != "PC" || platform != "PS4" || platform != "X1")
-        // {
-        //     console.log(platform);
-        //     message.channel.send(":x: **Invaild platform type!**")
-        // }
+    options: [
+        {
+          name: 'platform',
+          type: 3, // 'STRING' Type
+          description: 'The platform you play on',
+          required: true,
+          choices: [
+            {
+                name: 'PC (Origin)',
+                value: 'PC'
+            },
+            {
+                name: 'Xbox',
+                value: 'X1'
+            },
+            {
+                name: 'Playstation',
+                value: 'PS4'
+            }
+          ]
+        },
+        {
+            name: 'player_name',
+            type: 3, // 'STRING' Type
+            description: 'Your in game name.',
+            required: true,
+        }
+      ],
+    async execute(interaction, client) {
+        var playerName = interaction.options.get('player_name').value;
+        var platform = interaction.options.get('platform').value;
 
         var options = {
-            url: `https://api.mozambiquehe.re/bridge?version=5&platform=${platform}&player=${args[2]}&auth=${config.apex.apiKey}`,
+            url: `https://api.mozambiquehe.re/bridge?version=5&platform=${platform}&player=${playerName}&auth=${config.apex.apiKey}`,
         };
 
         console.log(options.url);
@@ -39,32 +56,33 @@ module.exports = {
 
                 if(info.global.avatar != "Not available")
                 {
-                    embed.setAuthor(info.global.name, info.global.avatar)
+                    embed.setTitle(`${getStatusEmote(info.realtime)} ${info.global.name}`, info.global.avatar)
                 }
                 else
                 {
-                    embed.setAuthor(info.global.name)
+                    embed.setTitle(`${getStatusEmote(info.realtime)} ${info.global.name}`)
                 }
 
                 embed.setThumbnail(info.legends.selected.ImgAssets.icon)
 
-                embed.addField("Level", info.global.level, true)
-                embed.addField("BP Level", getBpLevel(info.global.battlepass), true)
+                embed.addField("Level", info.global.level.toString(), true)
+                embed.addField("BP Level", getBpLevel(info.global.battlepass).toString(), true)
                 embed.addField("Rank", getRank(info.global.rank), false)
-                embed.addField("Status", getStatus(info.realtime), true)
-                message.channel.send(embed);             
+                //embed.addField("Status", getStatus(info.realtime), true)
+                interaction.reply({
+                    embeds: [ embed ]
+                })            
             }
             else if(info.Error != null)
             {
-                message.channel.send(':x: ```' + info.Error + '```');
                 logger.error("Returned Error: " + info.Error);
+                interaction.reply({
+                    content: '```' + info.Error + '```'
+                })
             }
         }
           
         request(options, callback);
-        message.channel.send(":floppy_disk: **Finding player...**").then(msg => {
-            msg.delete({ timeout: 2500 });
-        });
     }
 }
 
@@ -82,32 +100,34 @@ function getRank(rank) {
 }
 
 function getBpLevel(bp) {
-    if(bp.level != -1)
-    {
-        var format = bp.level
-        return format;
-    }
-    else
-    {
-        var format = "Not Purchased";
-        return format;
-    }
+    return bp.level;
+
+    // if(bp.level != -1)
+    // {
+    //     var format = bp.level
+    //     return format;
+    // }
+    // else
+    // {
+    //     var format = "Not Purchased";
+    //     return format;
+    // }
 }
 
-function getStatus(status) {
+function getStatusEmote(status) {
     if(status.isOnline == 0)
     {
-        let offline = "Offline"
+        let offline = ":white_circle:"
         return offline;
     }
     else if(status.isOnline == 1)
     {
-        let online = "Online"
+        let online = ":green_circle:"
         return online;
     }
     else if(status.isOnline == 1 && status.isInGame == 1)
     {
-        let online = "In Game"
+        let online = ":blue_circle:"
         return online;
     }
     else if(status.realtime.currentState != "offline")

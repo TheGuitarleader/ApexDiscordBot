@@ -8,7 +8,7 @@ module.exports = {
     name: "info",
     description: "Gives the user more information about the bot",
     group: "general",
-    async execute(message, client) {
+    async execute(interaction, client) {
         var options = {
             url: 'https://api.github.com/repos/TheGuitarleader/MozamBot',
             headers: {
@@ -27,11 +27,14 @@ module.exports = {
                 .setDescription(`Made by Kyle Ebby\n\n` +
                 `Built on:\nDiscord.js v${package.dependencies["discord.js"].replace("^","")}\n` +
                 `Thanks to @hugo#2253 for creating https://apexlegendsstatus.com/\n`)
-                .addField("Stars", info.stargazers_count, true)
-                .addField("Issues", info.open_issues, true)
+                .addField("Stars", info.stargazers_count.toString(), true)
+                .addField("Issues", info.open_issues.toString(), true)
                 .setURL(info.html_url)   
-                message.reply(embed);
-                logger.log(`Showed info on guild '${message.guild.id}' (${message.guild.name})`, 'command');
+                logger.log(`Showed info on guild '${interaction.guild.name}' (${interaction.guild.id})`, this.name);
+                interaction.reply({
+                    embeds: [ embed ],
+                    ephemeral: true,
+                });
             }
         }
           

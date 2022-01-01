@@ -8,16 +8,18 @@ module.exports = {
     name: "changelog",
     description: "Sends a message talking about whats changed",
     group: 'general',
-    async execute(message) {
+    async execute(interaction, client) {
         var changelog = await readChangelog('./textfiles/changelog.txt');
         
         const embed = new Discord.MessageEmbed()
         .setColor(config.discord.embedHex)
-        .setTitle(`What's new with ${message.client.user.username} v${package.version}?`)
+        .setTitle(`What's new with ${client.user.username} v${package.version}?`)
         .setDescription(changelog)
 
-        message.reply(embed);
-        logger.log(`Displayed changelog on guild ${message.guild.id} (${message.guild.name})`, 'command');
+        logger.log(`Displayed changelog on guild ${interaction.guild.id} (${interaction.guild.name})`, this.name);
+        interaction.reply({
+            embeds: [ embed ]
+        });
     }
 }
 

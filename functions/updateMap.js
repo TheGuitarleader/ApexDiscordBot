@@ -17,8 +17,8 @@ module.exports = function(client) {
             if(info.battle_royale != undefined)
             {
                 var map = info.battle_royale.current.map;
-                client.user.setPresence({ activity: { name: `on ${map}` }});
-                logger.log(`Updated map to '${map}'`);
+                client.user.setPresence({ activities: [{ name: `on ${map}` }], status: 'online' });
+                //logger.log(`Updated map to '${map}'`);
             }
             else
             {
@@ -29,5 +29,5 @@ module.exports = function(client) {
     }
       
     request(options, callback);
-    logger.log(`Sending Map API request: ${options.url}`);
+    //logger.log(`Sending Map API request: ${options.url}`);
 }
