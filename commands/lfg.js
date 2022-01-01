@@ -8,23 +8,28 @@ let db = new sqlite.Database('./BotData.db');
 module.exports = {
     name: "lfg",
     description: "Helps you find players for Apex",
-    group: 'general',
-    async execute(message, client) {
-        var args = message.content.split(' ');
-        var mode = args[1].toLowerCase();
-
-        if(mode == "br" || mode == "ranked")
+    options: [
         {
-            FindPlayers("brRanks", message.guild.member(message.author.id).displayName, 10, message);
+          name: 'mode',
+          type: 3, // 'STRING' Type
+          description: 'The mode to find players on.',
+          required: true,
+          choices: [
+            {
+                name: 'Battle Royal Ranked',
+                value: 'brRanks'
+            },
+            {
+                name: 'Arenas Ranked',
+                value: 'arRanks'
+            }
+          ]
         }
-        else if(mode == "ar" || mode == "arenas-ranked")
-        {
-            FindPlayers("arRanks", message.guild.member(message.author.id).displayName, 10, message);
-        }
-        else
-        {
-            message.channel.send(':x: `' + mode + '`** is not a valid parameter!**');
-        }
+      ],
+    async execute(interaction, client) {
+        console.log(interaction.options.get('mode').value);
+        console.log(interaction.member.displayName);
+        FindRankedPlayers(interaction.options.get('mode').value, interaction.member.displayName, 10, interaction);
     }
 }
 
@@ -32,7 +37,7 @@ function numCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-function FindPlayers(table, playerName, buffer, message) {
+function FindPubPlayers(table, playerName, buffer, message) {
     let players = [];
 
     console.log("Buffer: " + buffer);
@@ -42,7 +47,7 @@ function FindPlayers(table, playerName, buffer, message) {
         }
 
         console.log("Buffer: " + buffer);
-        db.all(`SELECT * FROM ${table} WHERE rankedScore >= ${rank.rankedScore - buffer} AND rankedScore <= ${(rank.rankedScore + buffer) - 20} AND level >= ${rank.level - buffer} AND level <= ${(rank.level + buffer) - 20}`, (err, rows) => {
+        db.all(`SELECT * FROM ${table} WHERE level >= ${rank.level - buffer} AND level <= ${(rank.level + buffer) - 20}`, (err, rows) => {
             if(err){
                 console.log(err);
             }
@@ -68,17 +73,63 @@ function FindPlayers(table, playerName, buffer, message) {
                 {
                     console.log("Running again...");
                     //count++;
-                    FindPlayers(table, playerName, buffer + 50, message);
+                    FindPubPlayers(table, playerName, buffer + 50, message);
                 }
                 else {
-                    displayPlayers(message.channel, players);
+                    displayPlayers(players);
                 }
             }
         });
     });
 }
 
-function displayPlayers(channel, players) {
+function FindRankedPlayers(table, playerName, buffer, interaction) {
+    let players = [];
+
+    console.log("Buffer: " + buffer);
+    db.get(`SELECT * FROM ${table} WHERE username = ?`, [playerName], (err, rank) => {
+        if(err){
+            console.log(err);
+        }
+
+        console.log("Buffer: " + buffer);
+        db.all(`SELECT * FROM ${table} WHERE rankedScore >= ${rank.rankedScore - buffer} AND rankedScore <= ${(rank.rankedScore + buffer) - 20}`, (err, rows) => {
+            if(err){
+                console.log(err);
+            }
+            else
+            {
+                rows.forEach((row) => {
+                    if(!players.includes(row.username) && row.username != playerName)
+                    {
+                        if(rank.legend != row.legend)
+                        {
+                            players.push(row);
+                            console.log("Added");
+                        }
+                        else
+                        {
+                            console.log("Found player that uses same Legend");
+                        }
+                    }
+                });
+
+                console.log(`Players: ${players.length}`);
+                if(players.length < 2 && buffer < 500)
+                {
+                    console.log("Running again...");
+                    //count++;
+                    FindRankedPlayers(table, playerName, buffer + 50, interaction);
+                }
+                else {
+                    displayPlayers(interaction, players);
+                }
+            }
+        });
+    });
+}
+
+function displayPlayers(interaction, players) {
 
     console.log(players);
 
@@ -104,7 +155,10 @@ function displayPlayers(channel, players) {
         embed.addField(`${player.username} (${player.legend})`, `${player.rankedTier} (${numCommas(player.rankedScore)} RP)`)
     });
 
-    channel.send(embed);
+    interaction.reply({
+        embeds: [embed],
+        ephemeral: true
+    });
 }
 
 function numCommas(x) {

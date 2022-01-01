@@ -5,19 +5,20 @@ const logger = require('kailogs');
 module.exports = {
     name: "clear",
     description: "Deletes messages in a channel",
-    group: "admin",
-    async execute(message) {
-        if (message.member.hasPermission("MANAGE_MESSAGES") || message.member.id == config.discord.devID)
+    async execute(interaction, client) {
+        if (interaction.member.hasPermission("MANAGE_MESSAGES") || interaction.member.id == config.discord.devID)
         {
-            message.channel.messages.fetch({ limit: number + 1 }).then(function(list) {
-                message.channel.bulkDelete(list);
-                logger.log(`Cleared ${list.size} messages on guild '${message.guild.id}' (${message.guild.name})`, 'command');
-                message.channel.send(':white_check_mark: **Chats cleared!** :thumbsup:').then(msg => {
+            interaction.channel.messages.fetch({ limit: number + 1 }).then(function(list) {
+                interaction.channel.bulkDelete(list);
+                logger.log(`Cleared ${list.size} messages on guild '${interaction.guild.name}' (${interaction.guild.id})`, this.name);
+                interaction.reply(':white_check_mark: **Chats cleared!** :thumbsup:').then(msg => {
                     msg.delete({ timeout: 3000 });
                 })
             }, function(err) {
-                message.channel.send(":x: **Failed to delete messages**");
-                logger.error(err, 'commands');
+                logger.error(err, this.name);
+                interaction.reply({
+                    contents: ":x: **Failed to delete messages**"
+                });
             })
         }
         else

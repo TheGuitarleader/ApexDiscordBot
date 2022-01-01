@@ -16,9 +16,9 @@ module.exports = function(guild, client) {
     //     updateDB("PS4", ps4Users);
     // });
 
-    // getXboxUsers().then((xboxUsers) => {
-    //     updateDB("X1", xboxUsers, guild, client);
-    // });
+    getXboxUsers().then((xboxUsers) => {
+        updateDB("X1", xboxUsers, guild, client);
+    });
 }
 
 //
@@ -101,18 +101,18 @@ function updateDB(platform, uids, guild, client) {
                             {
                                 try 
                                 {
-                                    var member = guild.member(user.discordID);
-
-                                    if(member.manageable == true) {
-                                        member.setNickname(player.global.name);
-                                    }
-                                    else
-                                    {
-                                        logger.warn(`Unable to update ${member.displayName}'s name!'`);
-                                    }
-    
-                                    console.log(player.global.name)
-                                    console.log(player.realtime);
+                                    guild.members.fetch(user.discordID).then((member) => {
+                                        if(member.manageable == true) {
+                                            member.setNickname(player.global.name);
+                                            updateRoles(player, member);
+                                        }
+                                        else
+                                        {
+                                            //logger.warn(`Unable to update ${member.displayName}'s name!'`);
+                                        }
+        
+                                        //console.log(player.global);
+                                    });
         
                                     //let gameRole = guild.roles.cache.find(r => r.name === "In Game")
         
@@ -153,6 +153,9 @@ function updateDB(platform, uids, guild, client) {
                 {
                     client.user.setStatus('dnd');
                     logger.error("Returned Error: " + player.Error, 'function');
+                    // client.users.fetch(config.discord.devID).then((dev) => {
+                    //     dev.send("Returned Error: " + player.Error);
+                    // })
                 }
             });
         }
@@ -178,27 +181,19 @@ function updateDB(platform, uids, guild, client) {
                         {
                             try 
                             {
-                                var member = guild.member(user.discordID);
+                                guild.members.fetch(user.discordID).then((member) => {
+                                    if(member.manageable == true) {
+                                        member.setNickname(player.global.name);
+                                        updateRoles(player, member);
+                                    }
+                                    else
+                                    {
+                                        //logger.warn(`Unable to update ${member.displayName}'s name!'`);
+                                    }
     
-                                console.log(player.global.name)
-                                console.log(player.realtime);
+                                    console.log(player.global);
+                                });
     
-                                member.setNickname(player.global.name);
-    
-                                let gameRole = guild.roles.cache.find(r => r.name === "In Game")
-    
-                                if(player.realtime.isInGame == 0 && player.realtime.isOnline == 1)
-                                {
-                                    member.roles.remove(gameRole);
-                                }
-                                else if(player.realtime.isInGame == 1 && player.realtime.isOnline == 1)
-                                {
-                                    member.roles.add(gameRole);
-                                }
-                                else if(player.realtime.isInGame == 0 && player.realtime.isOnline == 0)
-                                {
-                                    member.roles.remove(gameRole);
-                                }
                             } catch (err) 
                             {
                                 logger.error(err, 'function')
@@ -229,7 +224,77 @@ function updateDB(platform, uids, guild, client) {
     }
       
     request(options, makeCallback);
-    logger.log(`Sending Player API request: ${options.url}`);
+    //logger.log(`Sending Player API request: ${options.url}`);
+}
+
+function updateRoles(player, member) {   
+    console.log(player.global.name);
+    console.log(player.global.level);
+    //console.log(member.roles);
+    
+    if(player.global.level > 499)
+    {
+        var role = member.guild.roles.cache.find(r => r.name === "Level 500+");
+        if(!member.roles.cache.find(r => r.name === "Level 500+"))
+        {
+            member.roles.add(role);
+
+            var prevRole = member.guild.roles.cache.find(r => r.name === "Level 400+");
+            member.roles.remove(prevRole);
+        }
+    }
+    else if(player.global.level > 400 && player.global.level < 499)
+    {
+        var role = member.guild.roles.cache.find(r => r.name === "Level 400+");
+        if(!member.roles.cache.find(r => r.name === "Level 400+"))
+        {
+            member.roles.add(role);
+
+            var prevRole = member.guild.roles.cache.find(r => r.name === "Level 300+");
+            member.roles.remove(prevRole);
+        }
+    }
+    else if(player.global.level > 300 && player.global.level < 399)
+    {
+        var role = member.guild.roles.cache.find(r => r.name === "Level 300+");
+        if(!member.roles.cache.find(r => r.name === "Level 300+"))
+        {
+            member.roles.add(role);
+
+            var prevRole = member.guild.roles.cache.find(r => r.name === "Level 200+");
+            member.roles.remove(prevRole);
+        }
+    }
+    else if(player.global.level > 200 && player.global.level < 299)
+    {
+        var role = member.guild.roles.cache.find(r => r.name === "Level 200+");
+        if(!member.roles.cache.find(r => r.name === "Level 200+"))
+        {
+            member.roles.add(role);
+
+            var prevRole = member.guild.roles.cache.find(r => r.name === "Level 100+");
+            member.roles.remove(prevRole);
+        }
+    }
+    else if(player.global.level > 100 && player.global.level < 199)
+    {
+        var role = member.guild.roles.cache.find(r => r.name === "Level 100+");
+        if(!member.roles.cache.find(r => r.name === "Level 100+"))
+        {
+            member.roles.add(role);
+
+            var prevRole = member.guild.roles.cache.find(r => r.name === "Level 1+");
+            member.roles.remove(prevRole);
+        }
+    }
+    else if(player.global.level > 0 && player.global.level < 99)
+    {
+        var role = member.guild.roles.cache.find(r => r.name === "Level 1+");
+        if(!member.roles.cache.find(r => r.name === "Level 1+"))
+        {
+            member.roles.add(role);
+        }
+    }
 }
 
 function getRank(rankName, rankTier) {
