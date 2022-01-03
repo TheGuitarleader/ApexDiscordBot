@@ -8,6 +8,7 @@ const clock = require('date-events')();
 const moment = require('moment');
 const updatePlayers = require('./functions/updatePlayers.js');
 const updateMap = require('./functions/updateMap.js');
+const updateRPDiff = require('./functions/updateRPDiff.js');
 
 const client = new Client();
 client.commands = new Discord.Collection();
@@ -32,6 +33,7 @@ client.once('disconnect', () => {
 client.once('ready', () => {
     logger.log('Online and connected to Discord', 'main');
     updateMap(client);
+    updateRPDiff();
     client.guilds.fetch(config.discord.guild).then((g) => {
         g.commands.set(client.commands)
     });
@@ -41,6 +43,10 @@ client.once('ready', () => {
 clock.on('23:59', function (date) {
     logger.save();
     logger.createLog('./logs');
+});
+
+clock.on('5:01', function (date) {
+    updateRPDiff();
 });
 
 setInterval(function() {

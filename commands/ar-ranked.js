@@ -71,7 +71,7 @@ module.exports = {
                 data.forEach((d) => {
                     if(num <= 10)
                     {
-                        embed.addField(`#${num} - ${d.username}`, `${d.rankedTier} (${numCommas(d.rankedScore)} RP)`);
+                        embed.addField(`#${num} - ${d.username} (${getRPDiff(d.rankedScore, d.oldRP)})`, `${d.rankedTier} (${numCommas(d.rankedScore)} RP)`);
                         num++;
                     }
                 })
@@ -102,7 +102,7 @@ module.exports = {
                 data.forEach((d) => {
                     if(num <= 10)
                     {
-                        embed.addField(`#${num} - ${d.username}`, `${d.rankedTier} (${numCommas(d.rankedScore)} RP)`);
+                        embed.addField(`#${num} - ${d.username} (${getRPDiff(d.rankedScore, d.oldRP)})`, `${d.rankedTier} (${numCommas(d.rankedScore)} RP)`);
                         num++;
                     }
                 })
@@ -133,7 +133,7 @@ module.exports = {
                 data.forEach((d) => {
                     if(num <= 10)
                     {
-                        embed.addField(`#${num} - ${d.username}`, `${d.rankedTier} (${numCommas(d.rankedScore)} RP)`);
+                        embed.addField(`#${num} - ${d.username} (${getRPDiff(d.rankedScore, d.oldRP)})`, `${d.rankedTier} (${numCommas(d.rankedScore)} RP)`);
                         num++;
                     }
                 })
@@ -164,7 +164,7 @@ module.exports = {
                 data.forEach((d) => {
                     if(num <= 10)
                     {
-                        embed.addField(`#${num} - ${d.username}`, `${d.rankedTier} (${numCommas(d.rankedScore)} RP)`);
+                        embed.addField(`#${num} - ${d.username} (${getRPDiff(d.rankedScore, d.oldRP)})`, `${d.rankedTier} (${numCommas(d.rankedScore)} RP)`);
                         num++;
                     }
                 })
@@ -195,7 +195,7 @@ module.exports = {
                 data.forEach((d) => {
                     if(num <= 10)
                     {
-                        embed.addField(`#${num} - ${d.username}`, `${d.rankedTier} (${numCommas(d.rankedScore)} RP)`);
+                        embed.addField(`#${num} - ${d.username} (${getRPDiff(d.rankedScore, d.oldRP)})`, `${d.rankedTier} (${numCommas(d.rankedScore)} RP)`);
                         num++;
                     }
                 })
@@ -226,7 +226,7 @@ module.exports = {
                 data.forEach((d) => {
                     if(num <= 10)
                     {
-                        embed.addField(`#${num} - ${d.username}`, `${d.rankedTier} (${numCommas(d.rankedScore)} RP)`);
+                        embed.addField(`#${num} - ${d.username} (${getRPDiff(d.rankedScore, d.oldRP)})`, `${d.rankedTier} (${numCommas(d.rankedScore)} RP)`);
                         num++;
                     }
                 })
@@ -257,7 +257,7 @@ module.exports = {
                 data.forEach((d) => {
                     if(num <= 10)
                     {
-                        embed.addField(`#${num} - ${d.username}`, `${d.rankedTier} (${numCommas(d.rankedScore)} RP)`);
+                        embed.addField(`#${num} - ${d.username} (${getRPDiff(d.rankedScore, d.oldRP)})`, `${d.rankedTier} (${numCommas(d.rankedScore)} RP)`);
                         num++;
                     }
                 })
@@ -289,7 +289,7 @@ module.exports = {
                 data.forEach((d) => {
                     if(num <= 10)
                     {
-                        embed.addField(`#${num} - ${d.username}`, `${d.rankedTier} (${numCommas(d.rankedScore)} RP)`);
+                        embed.addField(`#${num} - ${d.username} (${getRPDiff(d.rankedScore, d.oldRP)})`, `${d.rankedTier} (${numCommas(d.rankedScore)} RP)`);
                         num++;
                     }
                 })
@@ -311,4 +311,19 @@ function getRemainingDays(date) {
     var diffDays = Math.ceil(Math.abs(currentDate - createdDate) / (1000 * 60 * 60 * 24)) - 1;
     console.log(diffDays);
     return diffDays;
+}
+
+function getRPDiff(newValue, oldValue) {
+    var diff = newValue - oldValue;
+
+    if(newValue == oldValue) {
+        return "+0";
+    }
+    else if(diff >= 0) {
+        let format = "+" + numCommas(diff);
+        return format;
+    }
+    else if(diff < 0) {
+        return numCommas(diff);
+    }
 }

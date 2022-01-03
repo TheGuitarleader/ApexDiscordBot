@@ -135,16 +135,17 @@ function updateDB(platform, uids, guild, client) {
                             }
                         });
     
-                        db.run(`INSERT OR REPLACE INTO brRanks(uid, username, rankedTier, rankedScore, level, legend) VALUES("${player.global.uid}", "${player.global.name}", "${getRank(player.global.rank.rankName, player.global.rank.rankDiv)}", "${player.global.rank.rankScore}", "${player.global.level}", "${player.realtime.selectedLegend}")`, function(err) {
+                        db.run(`UPDATE brRanks SET username = "${player.global.name}", rankedTier = "${getRank(player.global.rank.rankName, player.global.rank.rankDiv)}", rankedScore = "${player.global.rank.rankScore}", level = "${player.global.level}", legend = "${player.realtime.selectedLegend}" WHERE uid = "${player.global.uid}"`, function(err) {
                             if(err) {
                                 logger.error(err, 'database');
                                 console.log(err);
                             }
                         });
-            
-                        db.run(`INSERT OR REPLACE INTO arRanks(uid, username, rankedTier, rankedScore, level, legend) VALUES("${player.global.uid}", "${player.global.name}", "${getRank(player.global.arena.rankName, player.global.arena.rankDiv)}", "${player.global.arena.rankScore}", "${player.global.level}", "${player.realtime.selectedLegend}")`, function(err) {
+
+                        db.run(`UPDATE arRanks SET username = "${player.global.name}", rankedTier = "${getRank(player.global.arena.rankName, player.global.arena.rankDiv)}", rankedScore = "${player.global.arena.rankScore}", level = "${player.global.level}", legend = "${player.realtime.selectedLegend}" WHERE uid = "${player.global.uid}"`, function(err) {
                             if(err) {
                                 logger.error(err, 'database');
+                                console.log(err);
                             }
                         });
                     });
@@ -201,16 +202,17 @@ function updateDB(platform, uids, guild, client) {
                         }
                     });
                     
-                    db.run(`INSERT OR REPLACE INTO brRanks(uid, username, rankedTier, rankedScore) VALUES("${player.global.uid}", "${player.global.name}", "${getRank(player.global.rank.rankName, player.global.rank.rankDiv)}", "${player.global.rank.rankScore}")`, function(err) {
+                    db.run(`UPDATE brRanks SET username = "${player.global.name}", rankedTier = "${getRank(player.global.rank.rankName, player.global.rank.rankDiv)}", rankedScore = "${player.global.rank.rankScore}", level = "${player.global.level}", legend = "${player.realtime.selectedLegend}" WHERE uid = "${player.global.uid}"`, function(err) {
                         if(err) {
                             logger.error(err, 'database');
                             console.log(err);
                         }
                     });
-        
-                    db.run(`INSERT OR REPLACE INTO arRanks(uid, username, rankedTier, rankedScore) VALUES("${player.global.uid}", "${player.global.name}", "${getRank(player.global.arena.rankName, player.global.arena.rankDiv)}", "${player.global.arena.rankScore}")`, function(err) {
+
+                    db.run(`UPDATE arRanks SET username = "${player.global.name}", rankedTier = "${getRank(player.global.arena.rankName, player.global.arena.rankDiv)}", rankedScore = "${player.global.arena.rankScore}", level = "${player.global.level}", legend = "${player.realtime.selectedLegend}" WHERE uid = "${player.global.uid}"`, function(err) {
                         if(err) {
                             logger.error(err, 'database');
+                            console.log(err);
                         }
                     });
                 });
