@@ -1,6 +1,6 @@
 {
   "name": "mozambot",
-  "version": "0.4.1",
+  "version": "0.4.3",
   "description": "A Discord bot for Apex Legends",
   "main": "main.js",
   "scripts": {

@@ -76,26 +76,108 @@ function updateDB(platform, uids, guild, client) {
     function makeCallback(error, response, body) {
         var info = JSON.parse(body);
 
-        if(Array.isArray(info) && info != undefined)
-        {
-            info.forEach((player) => { 
-
+        try {
+            if(Array.isArray(info) && info != undefined)
+            {
+                info.forEach((player) => { 
+    
+                    if(player.global != undefined)
+                    {
+                        client.user.setStatus('online');
+                        //logger.log(`Updating player: ${player.global.name}`, 'function')
+    
+                        db.serialize(() => {
+                            db.run(`UPDATE accounts SET originUser = "${player.global.name}" WHERE originID = "${player.global.uid}"`, function(err) {
+                                if(err) {
+                                    logger.error(err, 'api');
+                                    console.log(err);
+                                }
+                            });
+        
+                            db.get(`SELECT * FROM accounts WHERE originID = "${player.global.uid}"`, (err, user) => {
+                                if(err) {
+                                    logger.error(err, 'api');
+                                }
+                                else
+                                {
+                                    try 
+                                    {
+                                        guild.members.fetch(user.discordID).then((member) => {
+                                            if(member.manageable == true) {
+                                                member.setNickname(player.global.name);
+                                                updateRoles(player, member);
+                                            }
+                                            else
+                                            {
+                                                //logger.warn(`Unable to update ${member.displayName}'s name!'`);
+                                            }
+            
+                                            //console.log(player.global);
+                                        });
+            
+                                        //let gameRole = guild.roles.cache.find(r => r.name === "In Game")
+            
+                                        // if(player.realtime.isInGame == 0 && player.realtime.isOnline == 1)
+                                        // {
+                                        //     member.roles.remove(gameRole);
+                                        // }
+                                        // else if(player.realtime.isInGame == 1 && player.realtime.isOnline == 1)
+                                        // {
+                                        //     member.roles.add(gameRole);
+                                        // }
+                                        // else if(player.realtime.isInGame == 0 && player.realtime.isOnline == 0)
+                                        // {
+                                        //     member.roles.remove(gameRole);
+                                        // }
+                                    } catch (err) 
+                                    {
+                                        logger.error(err, 'function')
+                                    }
+                                }
+                            });
+        
+                            db.run(`UPDATE brRanks SET username = "${player.global.name}", rankedTier = "${getRank(player.global.rank.rankName, player.global.rank.rankDiv)}", rankedScore = "${player.global.rank.rankScore}", level = "${player.global.level}", legend = "${player.realtime.selectedLegend}" WHERE uid = "${player.global.uid}"`, function(err) {
+                                if(err) {
+                                    logger.error(err, 'api');
+                                    console.log(err);
+                                }
+                            });
+    
+                            db.run(`UPDATE arRanks SET username = "${player.global.name}", rankedTier = "${getRank(player.global.arena.rankName, player.global.arena.rankDiv)}", rankedScore = "${player.global.arena.rankScore}", level = "${player.global.level}", legend = "${player.realtime.selectedLegend}" WHERE uid = "${player.global.uid}"`, function(err) {
+                                if(err) {
+                                    logger.error(err, 'api');
+                                    console.log(err);
+                                }
+                            });
+                        });
+                    }
+                    else
+                    {
+                        client.user.setStatus('dnd');
+                        logger.error("Returned Error: " + player.Error, 'api');
+                        // client.users.fetch(config.discord.devID).then((dev) => {
+                        //     dev.send("Returned Error: " + player.Error);
+                        // })
+                    }
+                });
+            }
+            else
+            {
+                var player = info;
+    
                 if(player.global != undefined)
                 {
-                    client.user.setStatus('online');
-                    //logger.log(`Updating player: ${player.global.name}`, 'function')
-
                     db.serialize(() => {
                         db.run(`UPDATE accounts SET originUser = "${player.global.name}" WHERE originID = "${player.global.uid}"`, function(err) {
                             if(err) {
-                                logger.error(err, 'database');
+                                logger.error(err, 'api');
                                 console.log(err);
                             }
                         });
-    
+        
                         db.get(`SELECT * FROM accounts WHERE originID = "${player.global.uid}"`, (err, user) => {
                             if(err) {
-                                logger.error(err, 'database');
+                                logger.error(err, 'api');
                             }
                             else
                             {
@@ -111,40 +193,26 @@ function updateDB(platform, uids, guild, client) {
                                             //logger.warn(`Unable to update ${member.displayName}'s name!'`);
                                         }
         
-                                        //console.log(player.global);
+                                        console.log(player.global);
                                     });
         
-                                    //let gameRole = guild.roles.cache.find(r => r.name === "In Game")
-        
-                                    // if(player.realtime.isInGame == 0 && player.realtime.isOnline == 1)
-                                    // {
-                                    //     member.roles.remove(gameRole);
-                                    // }
-                                    // else if(player.realtime.isInGame == 1 && player.realtime.isOnline == 1)
-                                    // {
-                                    //     member.roles.add(gameRole);
-                                    // }
-                                    // else if(player.realtime.isInGame == 0 && player.realtime.isOnline == 0)
-                                    // {
-                                    //     member.roles.remove(gameRole);
-                                    // }
                                 } catch (err) 
                                 {
-                                    logger.error(err, 'function')
+                                    logger.error(err, 'api')
                                 }
                             }
                         });
-    
+                        
                         db.run(`UPDATE brRanks SET username = "${player.global.name}", rankedTier = "${getRank(player.global.rank.rankName, player.global.rank.rankDiv)}", rankedScore = "${player.global.rank.rankScore}", level = "${player.global.level}", legend = "${player.realtime.selectedLegend}" WHERE uid = "${player.global.uid}"`, function(err) {
                             if(err) {
-                                logger.error(err, 'database');
+                                logger.error(err, 'api');
                                 console.log(err);
                             }
                         });
-
+    
                         db.run(`UPDATE arRanks SET username = "${player.global.name}", rankedTier = "${getRank(player.global.arena.rankName, player.global.arena.rankDiv)}", rankedScore = "${player.global.arena.rankScore}", level = "${player.global.level}", legend = "${player.realtime.selectedLegend}" WHERE uid = "${player.global.uid}"`, function(err) {
                             if(err) {
-                                logger.error(err, 'database');
+                                logger.error(err, 'api');
                                 console.log(err);
                             }
                         });
@@ -153,75 +221,12 @@ function updateDB(platform, uids, guild, client) {
                 else
                 {
                     client.user.setStatus('dnd');
-                    logger.error("Returned Error: " + player.Error, 'function');
-                    // client.users.fetch(config.discord.devID).then((dev) => {
-                    //     dev.send("Returned Error: " + player.Error);
-                    // })
+                    console.log("api error", 'api');
                 }
-            });
+            }
         }
-        else
-        {
-            var player = info;
-
-            if(player.global != undefined)
-            {
-                db.serialize(() => {
-                    db.run(`UPDATE accounts SET originUser = "${player.global.name}" WHERE originID = "${player.global.uid}"`, function(err) {
-                        if(err) {
-                            logger.error(err, 'database');
-                            console.log(err);
-                        }
-                    });
-    
-                    db.get(`SELECT * FROM accounts WHERE originID = "${player.global.uid}"`, (err, user) => {
-                        if(err) {
-                            logger.error(err, 'database');
-                        }
-                        else
-                        {
-                            try 
-                            {
-                                guild.members.fetch(user.discordID).then((member) => {
-                                    if(member.manageable == true) {
-                                        member.setNickname(player.global.name);
-                                        updateRoles(player, member);
-                                    }
-                                    else
-                                    {
-                                        //logger.warn(`Unable to update ${member.displayName}'s name!'`);
-                                    }
-    
-                                    console.log(player.global);
-                                });
-    
-                            } catch (err) 
-                            {
-                                logger.error(err, 'function')
-                            }
-                        }
-                    });
-                    
-                    db.run(`UPDATE brRanks SET username = "${player.global.name}", rankedTier = "${getRank(player.global.rank.rankName, player.global.rank.rankDiv)}", rankedScore = "${player.global.rank.rankScore}", level = "${player.global.level}", legend = "${player.realtime.selectedLegend}" WHERE uid = "${player.global.uid}"`, function(err) {
-                        if(err) {
-                            logger.error(err, 'database');
-                            console.log(err);
-                        }
-                    });
-
-                    db.run(`UPDATE arRanks SET username = "${player.global.name}", rankedTier = "${getRank(player.global.arena.rankName, player.global.arena.rankDiv)}", rankedScore = "${player.global.arena.rankScore}", level = "${player.global.level}", legend = "${player.realtime.selectedLegend}" WHERE uid = "${player.global.uid}"`, function(err) {
-                        if(err) {
-                            logger.error(err, 'database');
-                            console.log(err);
-                        }
-                    });
-                });
-            }
-            else
-            {
-                client.user.setStatus('dnd');
-                console.log("api error", 'function');
-            }
+        catch(err) {
+            logger.error(err, 'api');
         }
     }
       

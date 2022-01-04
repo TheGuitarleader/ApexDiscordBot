@@ -5,7 +5,7 @@ const request = require('request');
 
 module.exports = {
     name: "player",
-    description: "Searches Apex for a player (Origin ONLY)",
+    description: "Searches Apex for a player.",
     options: [
         {
           name: 'platform',
@@ -64,11 +64,11 @@ module.exports = {
                 }
 
                 embed.setThumbnail(info.legends.selected.ImgAssets.icon)
-
                 embed.addField("Level", info.global.level.toString(), true)
-                embed.addField("BP Level", getBpLevel(info.global.battlepass).toString(), true)
-                embed.addField("Rank", getRank(info.global.rank), false)
-                //embed.addField("Status", getStatus(info.realtime), true)
+                embed.addField("BP Level", getBpLevel(info.global.battlepass).toString(), false)
+                embed.addField("Rank", getRank(info.global.rank), true)
+                embed.addField("RP", numCommas(info.global.rank.rankScore), true)
+
                 interaction.reply({
                     embeds: [ embed ]
                 })            
@@ -89,14 +89,18 @@ module.exports = {
 function getRank(rank) {
     if(rank.rankName == "Master" || rank.rankName == "Apex Predator")
     {
-        var format = `${rank.rankName} (${rank.rankScore})`;
+        var format = `${rank.rankName}`;
         return format;
     }
     else
     {
-        var format = `${rank.rankName} ${rank.rankDiv} (${rank.rankScore})`;
+        var format = `${rank.rankName} ${rank.rankDiv}`;
         return format;
     }
+}
+
+function numCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 function getBpLevel(bp) {

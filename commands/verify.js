@@ -168,8 +168,8 @@ function getStatusEmote(status) {
     }
     else if(status.isOnline == 1 && status.isInGame == 1)
     {
-        let online = ":blue_circle:"
-        return online;
+        let inGame = ":blue_circle:"
+        return inGame;
     }
     else if(status.realtime.currentState != "offline")
     {
