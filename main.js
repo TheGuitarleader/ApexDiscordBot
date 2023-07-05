@@ -34,7 +34,8 @@ client.once('ready', () => {
     logger.log('Online and connected to Discord', 'main');
     updateMap(client);
     client.guilds.fetch(config.discord.guild).then((g) => {
-        g.commands.set(client.commands)
+        g.commands.set(client.commands);
+        logger.log(`Updated commands on guild: '${g.name}' (${g.id})`, 'main');
     });
 });
 
